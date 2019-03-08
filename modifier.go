@@ -46,6 +46,12 @@ func (m *Modifier) Quarantine(reason string) error {
 	return m.writePacket(NewResponse('q', []byte(reason+null)).Response())
 }
 
+// Change envelope from
+func (m *Modifier) ChangeFrom(from string) error {
+	data := []byte(fmt.Sprintf("<%s>", from) + null)
+	return m.writePacket(NewResponse('e', data).Response())
+}
+
 // ChangeHeader replaces the header at the specified position with a new one
 func (m *Modifier) ChangeHeader(index int, name, value string) error {
 	buffer := new(bytes.Buffer)
