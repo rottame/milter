@@ -227,9 +227,7 @@ func (m *milterSession) Process(msg *Message) (Response, error) {
 }
 
 // HandleMilterComands processes all milter commands in the same connection
-func (m *milterSession) HandleMilterCommands() {
-	// close session socket on exit
-	defer m.sock.Close()
+func (m *milterSession) HandleMilterCommands() bool {
 
 	for {
 		// ReadPacket
@@ -238,7 +236,7 @@ func (m *milterSession) HandleMilterCommands() {
 			if err != io.EOF {
 				log.Printf("Error reading milter command: %v", err)
 			}
-			return
+			return false
 		}
 
 		// process command
@@ -248,7 +246,7 @@ func (m *milterSession) HandleMilterCommands() {
 				// log error condition
 				log.Printf("Error performing milter command: %v", err)
 			}
-			return
+			return false
 		}
 
 		// ignore empty responses
@@ -256,13 +254,26 @@ func (m *milterSession) HandleMilterCommands() {
 			// send back response message
 			if err = m.WritePacket(resp.Response()); err != nil {
 				log.Printf("Error writing packet: %v", err)
-				return
+				return false
 			}
 
 			if !resp.Continue() {
-				return
+				return true
 			}
 
+		}
+	}
+}
+
+// HandleMilterComands processes all milter commands in the same connection
+func (m *milterSession) Run() {
+	// close session socket on exit
+	defer m.sock.Close()
+
+	for {
+		ret := m.HandleMilterCommands()
+		if !ret {
+			return
 		}
 	}
 }

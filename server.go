@@ -26,6 +26,6 @@ func RunServer(server net.Listener, init MilterInit) error {
 			milter:   milter,
 		}
 		// handle connection commands
-		go session.HandleMilterCommands()
+		go session.Run()
 	}
 }
